@@ -24,7 +24,7 @@ export function ProductModal({
 }: ProductModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80%] overflow-y-scroll">
+      <DialogContent className="max-w-2xl max-h-[90%] overflow-y-scroll">
         <DialogHeader>
           <DialogTitle>
             {initialProduct ? "Edit Product" : "Add New Product"}

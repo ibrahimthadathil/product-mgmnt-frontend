@@ -61,19 +61,6 @@ export function DataTable<TData>({ data, columns }: DataTableProps<TData>) {
           ))}
         </tbody>
       </Table>
-
-      {/* Pagination */}
-      <div className="flex items-center gap-2 mt-2">
-        <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-          Prev
-        </button>
-        <span>
-          {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
-        </span>
-        <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-          Next
-        </button>
-      </div>
     </div>
   );
 }

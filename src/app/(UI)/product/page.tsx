@@ -23,7 +23,7 @@ export default function ProductsPage() {
     "products",
     getAllProduct
   );
-console.log(products);
+  console.log(products);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -49,9 +49,9 @@ console.log(products);
   const handleAddProduct = async (newProduct: FormData) => {
     try {
       setIsModalOpen(false);
-      const data =await addMutation.mutateAsync(newProduct);
-      if(data.success) toast.success(data.message)
-        else toast.error(data.message)
+      const data = await addMutation.mutateAsync(newProduct);
+      if (data.success) toast.success(data.message);
+      else toast.error(data.message);
     } catch (error) {
       toast.error("error in add product");
     }
@@ -60,11 +60,12 @@ console.log(products);
   const handleEditProduct = async (updatedProduct: FormData) => {
     if (!editingProduct?._id) return;
     try {
-      await editMutation.mutateAsync({
+      setIsModalOpen(false);
+      const data = await editMutation.mutateAsync({
         productId: editingProduct._id,
         data: updatedProduct,
       });
-      setIsModalOpen(false);
+      toast.success(data.message);
       setEditingProduct(null);
     } catch (error) {
       toast.error("error in edit product");
@@ -72,16 +73,15 @@ console.log(products);
   };
 
   const handleDeleteProduct = async (id: string) => {
-        
     try {
-     const data =  await deleteMutation.mutateAsync(id);
-     toast.success(data.message)
+      const data = await deleteMutation.mutateAsync(id);
+      toast.success(data.message);
     } catch (error) {
       toast.error("error in delete product");
     }
   };
 
-  const handleEditClick = (product: Product) => {    
+  const handleEditClick = (product: Product) => {
     setEditingProduct(product);
     setIsModalOpen(true);
   };
@@ -94,7 +94,7 @@ console.log(products);
   const columns: ColumnDef<Product>[] = [
     {
       header: "No",
-      cell:({row})=> <p>{row.index+1}</p>
+      cell: ({ row }) => <p>{row.index + 1}</p>,
     },
     {
       accessorKey: "name",
@@ -193,7 +193,7 @@ console.log(products);
     {
       id: "delete",
       header: "Delete",
-      cell: ({ row }) => {        
+      cell: ({ row }) => {
         return (
           <div className="flex justify-center">
             <Button
@@ -215,7 +215,7 @@ console.log(products);
     <main className="max-h-screen bg-background">
       <div className="w-full max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-foreground">Products</h1>
+          <h1 className="text-2xl font-bold text-foreground">Products</h1>
           <Button
             onClick={() => setIsModalOpen(true)}
             className="gap-2 bg-primary hover:bg-primary/90"
