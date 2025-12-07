@@ -22,29 +22,9 @@ export function ProductModal({
   onSubmit,
   initialProduct,
 }: ProductModalProps) {
-  //   useEffect(() => {
-  //     if (initialProduct) {
-  //       setFormData({
-  //         name: initialProduct.name,
-  //         category: initialProduct.category,
-  //         price: initialProduct.price.toString(),
-  //         description: initialProduct.description,
-  //         images: initialProduct.images,
-  //       });
-  //     } else {
-  //       setFormData({
-  //         name: "",
-  //         category: "",
-  //         price: "",
-  //         description: "",
-  //         images: [],
-  //       });
-  //     }
-  //   }, [initialProduct, isOpen]);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80%] overflow-y-scroll">
         <DialogHeader>
           <DialogTitle>
             {initialProduct ? "Edit Product" : "Add New Product"}

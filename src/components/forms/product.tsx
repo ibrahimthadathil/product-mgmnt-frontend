@@ -1,41 +1,245 @@
-import React from "react";
-import { useForm } from "react-hook-form";
+// "use client";
+// import React, { useState } from "react";
+// import { useForm, Controller } from "react-hook-form";
+// import { zodResolver } from "@hookform/resolvers/zod";
+// import { Button } from "../ui/button";
+// import { Upload, X } from "lucide-react";
+// import { Textarea } from "../ui/textarea";
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+// import { Input } from "../ui/input";
+// import { Product } from "@/types/types";
+// import { ProductFormValues, productSchema } from "@/schema/productSchema";
+
+// const CATEGORIES = ["Electronics", "Clothing", "Books", "Other"];
+
+// interface ProductFormProps {
+//   onSubmit: (formData: FormData) => void;
+//   onClose: () => void;
+//   initialProduct?: Product | null;
+// }
+
+// const ProductForm = ({ onSubmit, initialProduct, onClose }: ProductFormProps) => {
+//   const [imageFiles, setImageFiles] = useState<File[]>([]);
+//   const [imagePreviews, setImagePreviews] = useState<string[]>(
+//     (initialProduct?.images as string[]) || []
+//   );
+
+//   const {
+//     register,
+//     handleSubmit,
+//     control,
+//     setValue,
+//     formState: { errors },
+//   } = useForm<ProductFormValues>({
+//     resolver: zodResolver(productSchema),
+//     defaultValues: {
+//       name: initialProduct?.name || "",
+//       category: initialProduct?.category || "",
+//       price: initialProduct?.price !== undefined ? String(initialProduct.price) : "",
+//       description: initialProduct?.description || "",
+//       images: (initialProduct?.images as string[]) || [],
+//     },
+//   });
+
+//   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const files = Array.from(e.target.files || []);
+//     if (!files.length) return;
+
+//     setImageFiles((prev) => [...prev, ...files]);
+
+//     files.forEach((file) => {
+//       const reader = new FileReader();
+//       reader.onload = (event) => {
+//         if (event.target?.result) {
+//           setImagePreviews((prev) => {
+//             const newPreviews = [...prev, event?.target?.result as string];
+//             setValue("images", newPreviews, { shouldValidate: true });
+//             return newPreviews;
+//           });
+//         }
+//       };
+//       reader.readAsDataURL(file);
+//     });
+//   };
+
+//   const handleRemoveImage = (index: number) => {
+//     const newFiles = imageFiles.filter((_, i) => i !== index);
+//     const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    
+//     setImageFiles(newFiles);
+//     setImagePreviews(newPreviews);
+//     // Update form value for validation
+//     setValue("images", newPreviews, { shouldValidate: true });
+//   };
+
+//   const submitHandler = (data: ProductFormValues) => {
+//     const formData = new FormData();
+    
+//     formData.append("name", data.name);
+//     formData.append("category", data.category);
+//     formData.append("price", data.price);
+    
+//     if (data.description) {
+//       formData.append("description", data.description);
+//     }
+
+//     // Append new image files
+//     imageFiles.forEach((file) => {
+//       formData.append("images", file);
+//     });
+
+//     // For edit mode: append existing image URLs
+//     if (initialProduct) {
+//       formData.append("id", initialProduct._id as string);
+//       const existingImages = (initialProduct.images as string[]) || [];
+//       existingImages.forEach((url) => {
+//         formData.append("existingImages", url);
+//       });
+//     }
+
+//     onSubmit(formData);
+//   };
+
+//   return (
+//     <form onSubmit={handleSubmit(submitHandler)} className="space-y-6">
+//       {/* Product Name */}
+//       <div>
+//         <label className="block text-sm font-medium mb-2">Product Name *</label>
+//         <Input {...register("name")} placeholder="Enter product name" />
+//         {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
+//       </div>
+
+//       {/* Category */}
+//       <div>
+//         <label className="block text-sm font-medium mb-2">Category *</label>
+//         <Controller
+//           name="category"
+//           control={control}
+//           render={({ field }) => (
+//             <Select value={field.value} onValueChange={field.onChange}>
+//               <SelectTrigger>
+//                 <SelectValue placeholder="Select a category" />
+//               </SelectTrigger>
+//               <SelectContent>
+//                 {CATEGORIES.map((cat) => (
+//                   <SelectItem key={cat} value={cat}>
+//                     {cat}
+//                   </SelectItem>
+//                 ))}
+//               </SelectContent>
+//             </Select>
+//           )}
+//         />
+//         {errors.category && <p className="text-sm text-red-500 mt-1">{errors.category.message}</p>}
+//       </div>
+
+//       {/* Price */}
+//       <div>
+//         <label className="block text-sm font-medium mb-2">Price *</label>
+//         <Input
+//           {...register("price")}
+//           type="number"
+//           step="0.01"
+//           min="0"
+//           placeholder="0.00"
+//         />
+//         {errors.price && <p className="text-sm text-red-500 mt-1">{errors.price.message}</p>}
+//       </div>
+
+//       {/* Description */}
+//       <div>
+//         <label className="block text-sm font-medium mb-2">Description *</label>
+//         <Textarea {...register("description")} rows={4} placeholder="Enter product description" />
+//         {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>}
+//       </div>
+
+//       {/* Image Upload */}
+//       <div>
+//         <label className="block text-sm font-medium mb-2">Product Images *</label>
+//         <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition">
+//           <div className="flex flex-col items-center">
+//             <Upload className="w-6 h-6 text-gray-400 mb-2" />
+//             <span className="text-sm text-gray-500">Click to upload images</span>
+//           </div>
+//           <input
+//             type="file"
+//             multiple
+//             accept="image/*"
+//             onChange={handleImageUpload}
+//             className="hidden"
+//           />
+//         </label>
+
+//         {/* Image Previews */}
+//         {imagePreviews.length > 0 && (
+//           <div className="flex flex-wrap gap-3 mt-4">
+//             {imagePreviews.map((preview, index) => (
+//               <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border-2">
+//                 <img src={preview} alt={`preview-${index}`} className="w-full h-full object-cover" />
+//                 <button
+//                   type="button"
+//                   onClick={() => handleRemoveImage(index)}
+//                   className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1"
+//                 >
+//                   <X className="w-3 h-3" />
+//                 </button>
+//               </div>
+//             ))}
+//           </div>
+//         )}
+        
+//         {errors.images && <p className="text-sm text-red-500 mt-1">{errors.images.message}</p>}
+//       </div>
+
+//       {/* Actions */}
+//       <div className="flex gap-3 justify-end pt-4">
+//         <Button type="button" variant="outline" onClick={onClose}>
+//           Cancel
+//         </Button>
+//         <Button type="submit">
+//           {initialProduct ? "Update Product" : "Add Product"}
+//         </Button>
+//       </div>
+//     </form>
+//   );
+// };
+
+// export default ProductForm;
+
+
+"use client";
+import React, { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "../ui/button";
 import { Upload, X } from "lucide-react";
 import { Textarea } from "../ui/textarea";
-import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Input } from "../ui/input";
 import { Product } from "@/types/types";
-import { Select } from "@radix-ui/react-select";
 import { ProductFormValues, productSchema } from "@/schema/productSchema";
 
-const CATEGORIES = [
-  "Electronics",
-  "Clothing",
-  "Food",
-  "Books",
-  "Home & Garden",
-  "Sports",
-  "Toys",
-  "Other",
-];
+const CATEGORIES = ["Electronics", "Clothing", "Books", "Other"];
 
-
-const ProductForm = ({
-  onSubmit,
-  initialProduct,
-  onClose,
-}: {
-  onSubmit: (product: any) => void;
+interface ProductFormProps {
+  onSubmit: (formData: FormData) => void;
   onClose: () => void;
   initialProduct?: Product | null;
-}) => {
+}
+
+const ProductForm = ({ onSubmit, initialProduct, onClose }: ProductFormProps) => {
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  
+  // Track which existing images to keep
+  const [retainedExistingImages, setRetainedExistingImages] = useState<string[]>(
+    (initialProduct?.images as string[]) || []
+  );
+
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm<ProductFormValues>({
@@ -49,138 +253,205 @@ const ProductForm = ({
     },
   });
 
-  const images = watch("images") || [];
-  const selectedCategory = watch("category");
-
-  // Keep Select UI exactly same; we update hidden form field via setValue
-  const handleCategoryChange = (value: string) => {
-    setValue("category", value, { shouldValidate: true, shouldDirty: true });
-  };
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    Array.from(files).forEach((file) => {
+    setNewImageFiles((prev) => [...prev, ...files]);
+
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (!event.target?.result) return;
-        // Append image dataURL to images array
-        setValue("images", [...(watch("images") || []), event.target.result as string], {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
+        if (event.target?.result) {
+          setNewImagePreviews((prev) => {
+            const newPreviews = [...prev, event?.target?.result as string];
+            // Update form validation with total count
+            const totalImages = [...retainedExistingImages, ...newPreviews];
+            setValue("images", totalImages, { shouldValidate: true });
+            return newPreviews;
+          });
+        }
       };
       reader.readAsDataURL(file);
     });
   };
 
-  const handleRemoveImage = (index: number) => {
-    const current = watch("images") || [];
-    setValue(
-      "images",
-      (current as string[]).filter((_, i) => i !== index),
-      { shouldValidate: true, shouldDirty: true }
-    );
+  const handleRemoveExistingImage = (index: number) => {
+    const updatedRetained = retainedExistingImages.filter((_, i) => i !== index);
+    setRetainedExistingImages(updatedRetained);
+    
+    // Update form validation
+    const totalImages = [...updatedRetained, ...newImagePreviews];
+    setValue("images", totalImages, { shouldValidate: true });
+  };
+
+  const handleRemoveNewImage = (index: number) => {
+    const updatedFiles = newImageFiles.filter((_, i) => i !== index);
+    const updatedPreviews = newImagePreviews.filter((_, i) => i !== index);
+    
+    setNewImageFiles(updatedFiles);
+    setNewImagePreviews(updatedPreviews);
+    
+    // Update form validation
+    const totalImages = [...retainedExistingImages, ...updatedPreviews];
+    setValue("images", totalImages, { shouldValidate: true });
   };
 
   const submitHandler = (data: ProductFormValues) => {
-    const payload = {
-      ...data,
-      price: parseFloat(data.price),
-    };
-
-    if (initialProduct) {
-      onSubmit({ ...initialProduct, ...payload });
-    } else {
-      onSubmit(payload);
+    const formData = new FormData();
+    
+    formData.append("name", data.name);
+    formData.append("category", data.category);
+    formData.append("price", data.price);
+    
+    if (data.description) {
+      formData.append("description", data.description);
     }
+
+    // Append new image files
+    newImageFiles.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    // For edit mode: append only the retained existing image URLs
+    if (initialProduct) {
+      formData.append("id", initialProduct._id as string);
+      
+      // Only send the images user wants to keep (comma-separated string)
+      if (retainedExistingImages.length > 0) {
+        formData.append("existingImages", retainedExistingImages.join(','));
+      } else {
+        // Empty string indicates user removed all existing images
+        formData.append("existingImages", "");
+      }
+    }
+
+    onSubmit(formData);
   };
+
+  // Calculate total images for display
+  const totalImageCount = retainedExistingImages.length + newImagePreviews.length;
 
   return (
     <form onSubmit={handleSubmit(submitHandler)} className="space-y-6">
       {/* Product Name */}
       <div>
         <label className="block text-sm font-medium mb-2">Product Name *</label>
-        <Input type="text" placeholder="Enter product name" {...register("name")} required />
-        {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
+        <Input {...register("name")} placeholder="Enter product name" />
+        {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
       </div>
 
       {/* Category */}
       <div>
         <label className="block text-sm font-medium mb-2">Category *</label>
-        <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {CATEGORIES.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <input type="hidden" {...register("category")} />
-        {errors.category && <p className="text-sm text-destructive mt-1">{errors.category.message}</p>}
+        <Controller
+          name="category"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.category && <p className="text-sm text-red-500 mt-1">{errors.category.message}</p>}
       </div>
 
       {/* Price */}
       <div>
         <label className="block text-sm font-medium mb-2">Price *</label>
         <Input
+          {...register("price")}
           type="number"
-          placeholder="0.00"
           step="0.01"
           min="0"
-          {...register("price")}
-          required
+          placeholder="0.00"
         />
-        {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+        {errors.price && <p className="text-sm text-red-500 mt-1">{errors.price.message}</p>}
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium mb-2">Description</label>
-        <Textarea rows={4} placeholder="Enter product description" {...register("description")} />
-        {errors.description && (
-          <p className="text-sm text-destructive mt-1">{errors.description.message}</p>
-        )}
+        <label className="block text-sm font-medium mb-2">Description *</label>
+        <Textarea {...register("description")} rows={4} placeholder="Enter product description" />
+        {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>}
       </div>
 
       {/* Image Upload */}
       <div>
-        <label className="block text-sm font-medium mb-2">Product Images</label>
-        <div className="mb-4">
-          <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition">
-            <div className="flex flex-col items-center justify-center">
-              <Upload className="w-6 h-6 text-muted-foreground mb-2" />
-              <span className="text-sm text-muted-foreground">Click to upload or drag and drop</span>
-            </div>
-            <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
-          </label>
-        </div>
+        <label className="block text-sm font-medium mb-2">
+          Product Images * {totalImageCount > 0 && `(${totalImageCount})`}
+        </label>
+        <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition">
+          <div className="flex flex-col items-center">
+            <Upload className="w-6 h-6 text-gray-400 mb-2" />
+            <span className="text-sm text-gray-500">Click to upload images</span>
+          </div>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+        </label>
 
         {/* Image Previews */}
-        {images.length > 0 && (
-          <div className="flex flex-wrap gap-3">
-            {(images as string[]).map((image, index) => (
-              <div key={index} className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-border">
-                <img src={image || "/placeholder.svg"} alt={`preview-${index}`} className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage(index)}
-                  className="absolute top-0 right-0 bg-destructive text-white rounded-full p-1 transform translate-x-1 -translate-y-1"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+        {(retainedExistingImages.length > 0 || newImagePreviews.length > 0) && (
+          <div className="mt-4 space-y-3">
+            {/* Existing Images */}
+            {retainedExistingImages.length > 0 && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Existing Images</p>
+                <div className="flex flex-wrap gap-3">
+                  {retainedExistingImages.map((imageUrl, index) => (
+                    <div key={`existing-${index}`} className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-blue-300">
+                      <img src={imageUrl} alt={`existing-${index}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExistingImage(index)}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* New Images */}
+            {newImagePreviews.length > 0 && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2">New Images</p>
+                <div className="flex flex-wrap gap-3">
+                  {newImagePreviews.map((preview, index) => (
+                    <div key={`new-${index}`} className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-green-300">
+                      <img src={preview} alt={`new-${index}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewImage(index)}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
-        {/* register hidden images field */}
-        <input type="hidden" {...register("images")} />
-        {errors.images && <p className="text-sm text-destructive mt-1">{(errors.images as any).message}</p>}
+        
+        {errors.images && <p className="text-sm text-red-500 mt-1">{errors.images.message}</p>}
       </div>
 
       {/* Actions */}
@@ -188,7 +459,7 @@ const ProductForm = ({
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" className="bg-primary hover:bg-primary/90">
+        <Button type="submit">
           {initialProduct ? "Update Product" : "Add Product"}
         </Button>
       </div>

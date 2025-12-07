@@ -1,7 +1,7 @@
 export type ViewMode = "grid" | "table";
 
 export interface Product {
-  id: string | number;
+  _id?: string ;
   name: string;
   description: string;
   price: number;

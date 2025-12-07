@@ -7,6 +7,7 @@ import {
   getSortedRowModel,
   ColumnDef,
 } from "@tanstack/react-table";
+import { Table } from "../ui/table";
 
 interface DataTableProps<TData> {
   data: TData[];
@@ -24,16 +25,16 @@ export function DataTable<TData>({ data, columns }: DataTableProps<TData>) {
   });
 
   return (
-    <div className="p-4 border rounded">
+    <div className="p-4  rounded">
       {/* Headers */}
-      <table className="w-full border">
+      <Table className="w-full border rounded">
         <thead className="bg-gray-100">
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
                 <th
                   key={header.id}
-                  className="p-2 border cursor-pointer"
+                  className="p-2 border cursor-pointer text-center"
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   {flexRender(header.column.columnDef.header, header.getContext())}
@@ -52,16 +53,16 @@ export function DataTable<TData>({ data, columns }: DataTableProps<TData>) {
           {table.getRowModel().rows.map(row => (
             <tr key={row.id}>
               {row.getVisibleCells().map(cell => (
-                <td key={cell.id} className="p-2 border">
+                <td key={cell.id} className="p-2 border text-center">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
             </tr>
           ))}
         </tbody>
-      </table>
+      </Table>
 
-      {/* Pagination
+      {/* Pagination */}
       <div className="flex items-center gap-2 mt-2">
         <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
           Prev
@@ -72,7 +73,7 @@ export function DataTable<TData>({ data, columns }: DataTableProps<TData>) {
         <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
           Next
         </button>
-      </div> */}
+      </div>
     </div>
   );
 }
