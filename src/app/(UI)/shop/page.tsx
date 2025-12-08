@@ -40,19 +40,21 @@ const Page = () => {
     return uniqueCategories.sort();
   }, [products]);
 
-  const addToCartMutation = UseRMutation("cart", async (productId: string) => {
-    const result = await addToCart({ productId });
+  const addToCartMutation = UseRMutation("cart", async (product: string,qty:number =1) => {
+    const result = await addToCart({items:[{product,quantity:qty}]} );
     return { data: result };
   });
 
   const handleAddToCart = async (product: Product) => {
     if (!product._id) {
-      toast.error("Product ID is missing");
+      toast.warning("Product ID is missing");
       return;
     }
     try {
-      await addToCartMutation.mutateAsync(product._id);
-      toast.success("Product added to cart successfully!");
+     const data= await addToCartMutation.mutateAsync(product._id);
+     if(data.success){
+       toast.success(data.message);
+     }else toast.warning(data.message)
     } catch (error) {
       toast.error("Failed to add product to cart");
     }
