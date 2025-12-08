@@ -17,7 +17,7 @@ import { DataTable } from "@/components/table/dataTable";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { toast } from "sonner";
-
+export const dynamic = "force-dynamic";
 export default function ProductsPage() {
   const { data: products, isLoading: productLoading } = UseRQ<Product[]>(
     "products",

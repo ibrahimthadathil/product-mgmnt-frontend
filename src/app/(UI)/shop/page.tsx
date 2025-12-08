@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
+export const dynamic = "force-dynamic";
 
 const ITEMS_PER_PAGE = 8;
 

@@ -14,7 +14,7 @@ import { addToCart } from "@/api/cartApi";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
-
+export const dynamic = "force-dynamic";
 const ProductDetailPage = () => {
   const params = useParams();
   const router = useRouter();
