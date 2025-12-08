@@ -12,6 +12,15 @@ export const addToCart = async (
   }
 };
 
+export const getCart = async () => {
+  try {
+    const result = await instance.get("/api/cart");
+    return result.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const updateCart = async (data: {
   cartId: string;
   quantity: number;
@@ -24,9 +33,9 @@ export const updateCart = async (data: {
   }
 };
 
-export const deleteCart = async (cartId: string) => {
+export const deleteCart = async (productId: string) => {
   try {
-    const result = await instance.delete(`/api/cart/${cartId}`);
+    const result = await instance.delete(`/api/cart/${productId}`);
     return result.data;
   } catch (error) {
     throw error;

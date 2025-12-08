@@ -1,163 +1,173 @@
 "use client";
 
 import { useMemo } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-
+import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
-import type { CartItem, Iuser } from "@/types/types";
+import { toast } from "sonner";
+
+import type { BackendCartResponse, CartItem, Product } from "@/types/types";
 import CartItemRow from "./cart-item-row";
 import OrderSummary from "./order-summery";
-
-// Dummy user
-const DUMMY_USER: Iuser = {
-  userName: "john_doe",
-  email: "john@example.com",
-  password: "password123",
-} as Iuser;
-
-// Initial dummy items
-export const INITIAL_ITEMS: CartItem[] = [
-  {
-    id: "1",
-    name: "Classic Crewneck T-Shirt",
-    description: "Comfortable cotton t-shirt",
-    price: 25,
-    category: "T-Shirts",
-    images: ["https://picsum.photos/200/200?random=1"],
-    user: DUMMY_USER,
-    items: [{ product: "1", quantity: 1 }],
-    created_at: new Date(),
-  },
-  {
-    id: "2",
-    name: "Slim-Fit Chino Pants",
-    description: "Elegant slim-fit pants",
-    price: 45,
-    category: "Pants",
-    images: ["https://picsum.photos/200/200?random=2"],
-    user: DUMMY_USER,
-    items: [{ product: "2", quantity: 1 }],
-    created_at: new Date(),
-  },
-];
-
-// Zod schema matching flattened CartItemRow props
-const cartItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  price: z.number(),
-  category: z.string(),
-  images: z.array(z.string()),
-  quantity: z.number().min(1).max(99),
-});
-
-const cartSchema = z.object({
-  items: z.array(cartItemSchema),
-});
-
-type CartFormValues = z.infer<typeof cartSchema>;
-
-// Convert CartItem[] to flattened form for useForm
-const flattenCartItems = (items: CartItem[]) =>
-  items.map((item) => ({
-    id: item.id,
-    name: item.name,
-    description: item.description,
-    price: item.price,
-    category: item.category,
-    images: item.images,
-    quantity: item.items[0]?.quantity || 1,
-  }));
+import { UseRQ } from "@/hooks/useRQ";
+import { UseRMutation } from "@/hooks/useMutation";
+import { getCart, updateCart, deleteCart } from "@/api/cartApi";
 
 export default function ShoppingCart() {
-  const { control, watch, setValue } = useForm<CartFormValues>({
-    resolver: zodResolver(cartSchema),
-    // defaultValues: { items: flattenCartItems(INITIAL_ITEMS) },
-  });
+  const { data: cartData, isLoading: cartLoading } = UseRQ<BackendCartResponse>(
+    "cart",
+    getCart
+  );
 
-  const { fields } = useFieldArray({ control, name: "items" });
-  const items = watch("items") || [];;
+  const updateCartMutation = UseRMutation(
+    "cart",
+    async (data: { cartId: string; quantity: number }) => {
+      return await updateCart(data);
+    }
+  );
 
-  const { subtotal, tax, total } = useMemo(() => {
-    const sub = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const estimatedTax = sub * 0.05; // 5% tax
-    return {
-      subtotal: sub,
-      tax: estimatedTax,
-      total: sub + 5 + estimatedTax,
-    };
-  }, [items]);
+  const deleteCartMutation = UseRMutation(
+    "cart",
+    async (cartItemId: string) => {
+      return await deleteCart(cartItemId);
+    }
+  );
 
-  const handleUpdateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    const index = fields.findIndex((item) => item.id === id);
-    if (index >= 0) {
-      setValue(`items.${index}.quantity`, newQuantity, { shouldValidate: true });
+  const total = useMemo(() => {
+    if (!cartData?.items || cartData.items.length === 0) {
+      return 0;
+    }
+
+    return cartData.items.reduce((acc, item) => {
+      const price =
+        typeof item.product.price === "string"
+          ? parseFloat(item.product.price)
+          : item.product.price;
+      return acc + price * item.quantity;
+    }, 0);
+  }, [cartData]);
+
+  // Handle quantity update
+  const handleUpdateQuantity = async (cartId: string, newQuantity: number) => {
+    if (newQuantity < 1 || newQuantity > 99) {
+      toast.error("Quantity must be between 1 and 99");
+      return;
+    }
+
+    try {
+      await updateCartMutation.mutateAsync({
+        cartId,
+        quantity: newQuantity,
+      });
+      toast.success("Cart updated successfully");
+    } catch (error) {
+      toast.error("Failed to update cart");
+      console.error("Update cart error:", error);
     }
   };
 
-  const handleRemoveItem = (id: string) => {
-    setValue("items", items.filter((item) => item.id !== id), { shouldValidate: true });
+  // Handle item removal
+  const handleRemoveItem = async (cartItemId: string) => {
+    try {
+      await deleteCartMutation.mutateAsync(cartItemId);
+      toast.success("Item removed from cart");
+    } catch (error) {
+      toast.error("Failed to remove item");
+      console.error("Delete cart item error:", error);
+    }
   };
+
+  // Loading state
+  if (cartLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-lg text-slate-500">Loading cart...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const cartItems = cartData?.items || [];
+  const isEmpty = cartItems.length === 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-extrabold text-gray-900 mb-10 flex items-center gap-3">
         Your Shopping Cart
-        {items.length === 0 && (
+        {isEmpty && (
           <span className="text-gray-400 font-normal text-lg">(Empty)</span>
         )}
       </h1>
 
-      {items.length > 0 ? (
+      {!isEmpty ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Cart Items */}
           <div className="lg:col-span-8 space-y-4">
-            {items.map((item) => {
-              // Construct a proper CartItem from the flattened form data
+            {cartItems.map((item) => {
               const cartItem: CartItem = {
-                id: item.id,
-                name: item.name,
-                description: item.description,
-                price: item.price,
-                category: item.category,
-                images: item.images,
-                user: DUMMY_USER,
-                items: [{ product: item.id, quantity: item.quantity }],
-                created_at: new Date(),
+                _id: item.product._id,
+                name: item.product.name,
+                description: item.product.description,
+                price:
+                  typeof item.product.price === "string"
+                    ? parseFloat(item.product.price)
+                    : item.product.price,
+                category: item.product.category,
+                images: item.product.images,
+                user: cartData?.user as string,
+                items: [
+                  {
+                    product: item.product._id,
+                    quantity: item.quantity,
+                  },
+                ],
+                created_at: cartData?.createdAt
+                  ? new Date(cartData.createdAt)
+                  : undefined,
               };
+
               return (
                 <CartItemRow
-                  key={item.id}
+                  key={item._id}
                   item={cartItem}
+                  cartItProductId={cartItem?.items[0]?.product as string}
                   onUpdateQuantity={handleUpdateQuantity}
                   onRemove={handleRemoveItem}
+                  isUpdating={updateCartMutation.isPending}
+                  isRemoving={deleteCartMutation.isPending}
                 />
               );
             })}
           </div>
+
+          {/* Order Summary */}
           <div className="lg:col-span-4">
-            <OrderSummary subtotal={subtotal} shipping={5} tax={tax} total={total} />
+            <OrderSummary total={total} />
           </div>
         </div>
       ) : (
+        // Empty cart state
         <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
           <div className="flex justify-center mb-6">
             <div className="bg-gray-50 p-6 rounded-full">
               <ShoppingBag size={48} className="text-gray-300" />
             </div>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Your cart is empty
+          </h2>
           <p className="text-gray-500 mb-8 max-w-sm mx-auto">
             Looks like you haven't added anything to your cart yet.
           </p>
-          <button
+          <Link
+            href="/shop"
             className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
           >
-            Reload Sample Items
-          </button>
+            Continue Shopping
+          </Link>
         </div>
       )}
     </div>
