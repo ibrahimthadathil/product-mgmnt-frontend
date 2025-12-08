@@ -18,3 +18,11 @@ export const userSignUp = async (data:{email:string,password:string,userName:str
         throw error
     }
 }
+
+export const logout = async()=>{
+  try {
+    await instance.get('/api/auth/logout')
+  } catch (error) {
+    throw error
+  } 
+}

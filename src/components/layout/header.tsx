@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { navItems } from "@/const/navItems";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
+import { logout } from "@/api/authApi";
 
 export const Header = () => {
   const pathname = usePathname();
@@ -67,6 +68,7 @@ export const Header = () => {
   };
 
   const handleLogout = async () => {
+    logout()
     clearUser();
     clearCart();
     await signOut({ callbackUrl: "/login" });
@@ -175,7 +177,7 @@ export const Header = () => {
           )}
 
           {mounted && !isAuthenticated && (
-            <Button onClick={() => router.push("/login")} variant="outline" className="px-4">
+            <Button onClick={() => {router.push("/login")}} variant="outline" className="px-4">
               Login
           </Button>
           )}

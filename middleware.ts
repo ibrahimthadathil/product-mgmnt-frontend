@@ -8,15 +8,18 @@ const PRODUCT = "/product";
 const SHOP = "/shop";
 
 export async function middleware(req: NextRequest) {
+
   const { pathname, origin, search } = req.nextUrl;
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const isAuthenticated = Boolean(token);
   const role = token?.role;
 
-  if (pathname.startsWith(LOGIN) && isAuthenticated) {
-    return NextResponse.redirect(new URL(SHOP, origin));
-  }
+  if (pathname === LOGIN && isAuthenticated) {
+  const redirectTo = req.nextUrl.searchParams.get("callbackUrl") || SHOP;
+  return NextResponse.redirect(new URL(redirectTo, origin));
+}
+
 
   if (pathname.startsWith(CART) && !isAuthenticated) {
     const loginUrl = new URL(LOGIN, origin);

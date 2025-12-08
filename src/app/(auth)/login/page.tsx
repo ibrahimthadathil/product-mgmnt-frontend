@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function LoginClient() {
+ const Login=()=> {
   const router = useRouter();
   const { status } = useSession();
   const [isSignUp, setIsSignUp] = useState(false);
@@ -65,4 +65,4 @@ export function LoginClient() {
   );
 }
 
-
+export default Login
