@@ -17,6 +17,9 @@ import { getAllProduct } from "@/api/productApi";
 import { addToCart } from "@/api/cartApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
+import { useCartStore } from "@/store/cartStore";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -25,6 +28,9 @@ const Page = () => {
     "products",
     getAllProduct
   );
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+  const { items, addOrUpdateItem } = useCartStore();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 700);
@@ -40,32 +46,52 @@ const Page = () => {
     return uniqueCategories.sort();
   }, [products]);
 
-  const addToCartMutation = UseRMutation("cart", async (product: string,qty:number =1) => {
-    const result = await addToCart({items:[{product,quantity:qty}]} );
-    return { data: result };
-  });
+  const addToCartMutation = UseRMutation(
+    "cart",
+    async (payload: { product: string; qty: number }) => {
+      const result = await addToCart({
+        items: [{ product: payload.product, quantity: payload.qty }],
+      });
+      return { data: result };
+    }
+  );
 
-  const handleAddToCart = async (product: Product) => {
+  const handleAddToCart = async (product: Product, quantity = 1) => {
     if (!product._id) {
       toast.warning("Product ID is missing");
       return;
     }
+
+    if (!isAuthenticated) {
+      toast.error("Please login to add items to your cart");
+      router.push("/login");
+      return;
+    }
+
+    const alreadyInCart = items.some((item) => item.productId === product._id);
+    if (alreadyInCart) {
+      toast.info("This product is already in your cart");
+      return;
+    }
+
     try {
-     const data= await addToCartMutation.mutateAsync(product._id);
-     if(data.success){
-       toast.success(data.message);
-     }else toast.warning(data.message)
+      const data = await addToCartMutation.mutateAsync({
+        product: product._id,
+        qty: quantity,
+      });
+      if (data.success) {
+        toast.success(data.message);
+        addOrUpdateItem(product._id, quantity);
+      } else toast.warning(data.message);
     } catch (error) {
       toast.error("Failed to add product to cart");
     }
   };
 
-  // Filter and sort products
   const filteredProducts = useMemo(() => {
     if (!products || !Array.isArray(products)) return [];
     let filtered = [...products];
 
-    // Apply search filter (using debounced value)
     if (debouncedSearchQuery.trim()) {
       const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -75,14 +101,12 @@ const Page = () => {
       );
     }
 
-    // Apply category filter
     if (selectedCategory && selectedCategory !== "Category") {
       filtered = filtered.filter(
         (product) => product.category === selectedCategory
       );
     }
 
-    // Apply price sorting
     if (priceSort === "Low to High") {
       filtered.sort((a, b) => a.price - b.price);
     } else if (priceSort === "High to Low") {
@@ -92,13 +116,11 @@ const Page = () => {
     return filtered;
   }, [products, debouncedSearchQuery, selectedCategory, priceSort]);
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
-  // Grid config for GenericGrid
   const gridConfig = {
     getId: (product: Product) => product?._id || "",
     getImageUrl: (product: Product) => product?.images[0] || "",
@@ -112,11 +134,10 @@ const Page = () => {
     getNavigationUrl: (product: Product) => `/shop/${product?._id}`,
   };
 
-  // Table columns for DataTable
   const tableColumns: ColumnDef<Product>[] = [
     {
-      header:'No',
-      cell : ({row})=>(<p>{row.index +1}</p>)
+      header: "No",
+      cell: ({ row }) => <p>{row.index + 1}</p>,
     },
     {
       accessorKey: "imageUrl",
@@ -174,7 +195,6 @@ const Page = () => {
     },
   ];
 
-  // Handle filter changes
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);

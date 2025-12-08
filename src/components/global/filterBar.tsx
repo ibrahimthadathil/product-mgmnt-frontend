@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { LayoutGrid, List } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { ViewMode } from '@/types/types';
+import React, { useEffect } from "react";
+import { LayoutGrid, List } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ViewMode } from "@/types/types";
 
 interface FilterBarProps {
   viewMode: ViewMode;
@@ -34,16 +40,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 }) => {
   const { register, watch, setValue } = useForm<FilterFormData>({
     defaultValues: {
-      search: '',
-      category: 'Category',
-      price: 'Price',
+      search: "",
+      category: "Category",
+      price: "Price",
     },
   });
 
-  // Watch form values and trigger callbacks
-  React.useEffect(() => {
+  useEffect(() => {
     const subscription = watch((value, { name }) => {
-      if (name === 'search' && value.search !== undefined) {
+      if (name === "search" && value.search !== undefined) {
         onSearchChange(value.search);
       }
     });
@@ -51,14 +56,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   }, [watch, onSearchChange]);
 
   const handleCategoryChange = (value: string) => {
-    setValue('category', value);
+    setValue("category", value);
     if (onCategoryChange) {
       onCategoryChange(value);
     }
   };
 
   const handlePriceChange = (value: string) => {
-    setValue('price', value);
+    setValue("price", value);
     if (onPriceChange) {
       onPriceChange(value);
     }
@@ -67,9 +72,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="w-full md:w-96">
-        <Input 
-          {...register('search')}
-          placeholder="Search for products..." 
+        <Input
+          {...register("search")}
+          placeholder="Search for products..."
           className="h-10"
         />
       </div>
@@ -113,10 +118,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onViewModeChange('grid')}
+            onClick={() => onViewModeChange("grid")}
             className={cn(
               "flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all h-auto",
-              viewMode === 'grid'
+              viewMode === "grid"
                 ? "bg-white text-slate-900 shadow-sm hover:bg-white"
                 : "text-slate-500 hover:text-slate-900 hover:bg-transparent"
             )}
@@ -127,10 +132,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onViewModeChange('table')}
+            onClick={() => onViewModeChange("table")}
             className={cn(
               "flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all h-auto",
-              viewMode === 'table'
+              viewMode === "table"
                 ? "bg-white text-slate-900 shadow-sm hover:bg-white"
                 : "text-slate-500 hover:text-slate-900 hover:bg-transparent"
             )}

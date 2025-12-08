@@ -58,26 +58,21 @@ export function GenericGrid<T>({
     getNavigationUrl,
   } = config;
 
-  // Map column numbers to Tailwind classes
   const getGridClass = () => {
     const classes = ["grid", "grid-cols-1", "gap-6"];
 
-    // Small screens
     if (columns.sm === 2) classes.push("sm:grid-cols-2");
     else if (columns.sm === 3) classes.push("sm:grid-cols-3");
     else if (columns.sm === 4) classes.push("sm:grid-cols-4");
 
-    // Medium screens
     if (columns.md === 2) classes.push("md:grid-cols-2");
     else if (columns.md === 3) classes.push("md:grid-cols-3");
     else if (columns.md === 4) classes.push("md:grid-cols-4");
 
-    // Large screens - 4 columns for 8 cards layout
     if (columns.lg === 4) classes.push("lg:grid-cols-4");
     else if (columns.lg === 3) classes.push("lg:grid-cols-3");
     else if (columns.lg === 2) classes.push("lg:grid-cols-2");
 
-    // Extra large screens
     if (columns.xl === 4) classes.push("xl:grid-cols-4");
     else if (columns.xl === 3) classes.push("xl:grid-cols-3");
     else if (columns.xl === 5) classes.push("xl:grid-cols-5");

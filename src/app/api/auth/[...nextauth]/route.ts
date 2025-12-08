@@ -29,7 +29,7 @@ export const authOptions: NextAuthOptions = {
             }
           );
 
-          const { success, accessToken, message } = response.data;
+          const { success, accessToken, message, userName } = response.data;
 
           if (!success || !accessToken) {
             throw new Error(message || "Authentication failed");
@@ -42,6 +42,10 @@ export const authOptions: NextAuthOptions = {
           return {
             id: tokenPayload.id,
             email: tokenPayload.email,
+            name:
+              userName ||
+              tokenPayload.name ||
+              "",
             role: tokenPayload.role || "user",
             accessToken,
           };
@@ -59,6 +63,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.accessToken = user.accessToken;
         token.id = user.id;
+        token.name = user.name;
         token.role = user.role;
       }
       return token;
@@ -68,6 +73,7 @@ export const authOptions: NextAuthOptions = {
         session.user = {
           id: token.id as string,
           email: token.email as string,
+          name: token.name as string,
           role: token.role as string,
         };
         session.accessToken = token.accessToken as string;

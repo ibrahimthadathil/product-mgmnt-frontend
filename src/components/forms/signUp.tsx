@@ -1,24 +1,30 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { signUpSchema, type SignUpInput } from "@/schema/authSchema"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
-import { userSignUp } from "@/api/authApi"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { toast } from "sonner"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signUpSchema, type SignUpInput } from "@/schema/authSchema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { userSignUp } from "@/api/authApi";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface SignUpFormProps {
-  onSubmit?: (data: SignUpInput) => void | Promise<void>
+  onSubmit?: (data: SignUpInput) => void | Promise<void>;
 }
 
 export function SignUpForm({ onSubmit }: SignUpFormProps) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const form = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -26,35 +32,36 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
       email: "",
       password: "",
     },
-  })
+  });
 
   const handleSubmit = async (data: SignUpInput) => {
     if (onSubmit) {
-      await onSubmit(data)
-      return
+      await onSubmit(data);
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const result = await userSignUp({
         userName: data.username,
         email: data.email,
         password: data.password,
-      })
+      });
 
       if (result.success) {
-        toast.success("Account created successfully! Please sign in.")
-        // Redirect to sign in after successful signup
-        router.push("/login")
+        toast.success("Account created successfully! Please sign in.");
+        router.push("/login");
       } else {
-        toast.error(result.message || "Failed to create account")
+        toast.error(result.message || "Failed to create account");
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "An error occurred during sign up")
+      toast.error(
+        error.response?.data?.message || "An error occurred during sign up"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Form {...form}>
@@ -80,7 +87,12 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
             <FormItem>
               <Label htmlFor="signup-email">Email</Label>
               <FormControl>
-                <Input id="signup-email" placeholder="you@example.com" type="email" {...field} />
+                <Input
+                  id="signup-email"
+                  placeholder="you@example.com"
+                  type="email"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -94,7 +106,12 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
             <FormItem>
               <Label htmlFor="signup-password">Password</Label>
               <FormControl>
-                <Input id="signup-password" placeholder="••••••" type="password" {...field} />
+                <Input
+                  id="signup-password"
+                  placeholder="••••••"
+                  type="password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -106,5 +123,5 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
         </Button>
       </form>
     </Form>
-  )
+  );
 }

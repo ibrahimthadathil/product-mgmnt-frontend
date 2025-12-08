@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 import type { BackendCartResponse, CartItem, Product } from "@/types/types";
 import CartItemRow from "./cart-item-row";
@@ -11,12 +13,16 @@ import OrderSummary from "./order-summery";
 import { UseRQ } from "@/hooks/useRQ";
 import { UseRMutation } from "@/hooks/useMutation";
 import { getCart, updateCart, deleteCart } from "@/api/cartApi";
+import { useCartStore } from "@/store/cartStore";
 
 export default function ShoppingCart() {
+  const router = useRouter();
+  const { status } = useSession();
   const { data: cartData, isLoading: cartLoading } = UseRQ<BackendCartResponse>(
     "cart",
     getCart
   );
+  const { setCartFromResponse, clearCart } = useCartStore();
 
   const updateCartMutation = UseRMutation(
     "cart",
@@ -32,6 +38,17 @@ export default function ShoppingCart() {
     }
   );
 
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      clearCart();
+      router.replace("/login");
+    }
+  }, [status, clearCart, router]);
+
+  useEffect(() => {
+    setCartFromResponse(cartData);
+  }, [cartData, setCartFromResponse]);
+
   const total = useMemo(() => {
     if (!cartData?.items || cartData.items.length === 0) {
       return 0;
@@ -46,7 +63,6 @@ export default function ShoppingCart() {
     }, 0);
   }, [cartData]);
 
-  // Handle quantity update
   const handleUpdateQuantity = async (cartId: string, newQuantity: number) => {
     if (newQuantity < 1 || newQuantity > 99) {
       toast.error("Quantity must be between 1 and 99");
@@ -65,7 +81,6 @@ export default function ShoppingCart() {
     }
   };
 
-  // Handle item removal
   const handleRemoveItem = async (cartItemId: string) => {
     try {
       await deleteCartMutation.mutateAsync(cartItemId);
@@ -76,7 +91,6 @@ export default function ShoppingCart() {
     }
   };
 
-  // Loading state
   if (cartLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -149,7 +163,6 @@ export default function ShoppingCart() {
           </div>
         </div>
       ) : (
-        // Empty cart state
         <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
           <div className="flex justify-center mb-6">
             <div className="bg-gray-50 p-6 rounded-full">

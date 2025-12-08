@@ -6,7 +6,7 @@ import Image from "next/image";
 
 interface CartItemRowProps {
   item: CartItem;
-  cartItProductId: string; // The cart item _id from backend
+  cartItProductId: string; 
   onUpdateQuantity: (cartItProductId: string, newQuantity: number) => void;
   onRemove: (cartItProductId: string) => void;
   isUpdating?: boolean;

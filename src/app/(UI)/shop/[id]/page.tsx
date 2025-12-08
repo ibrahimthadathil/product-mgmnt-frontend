@@ -12,6 +12,8 @@ import { UseRMutation } from "@/hooks/useMutation";
 import { getProductById } from "@/api/productApi";
 import { addToCart } from "@/api/cartApi";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/authStore";
+import { useCartStore } from "@/store/cartStore";
 
 const ProductDetailPage = () => {
   const params = useParams();
@@ -19,6 +21,8 @@ const ProductDetailPage = () => {
   const productId = params?.id as string;
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const { isAuthenticated } = useAuthStore();
+  const { items, addOrUpdateItem } = useCartStore();
 
   const { data: product, isLoading, error } = UseRQ<Product>(
     `product-${productId}`, ()=>getProductById(productId)
@@ -34,12 +38,23 @@ const ProductDetailPage = () => {
       toast.warning("Product ID is missing");
       return;
     }
+
+    if (!isAuthenticated) {
+      toast.error("Please login to add items to your cart");
+      router.push("/login");
+      return;
+    }
+
+    const alreadyInCart = items.some((item) => item.productId === product._id);
+    if (alreadyInCart) {
+      toast.info("This product is already in your cart");
+      return;
+    }
     try {
       const data = await addToCartMutation.mutateAsync({ product: product._id, qty: quantity });
       if (data.success) {
         toast.success(data.message);
-        // Optionally reset quantity after adding to cart
-        // setQuantity(1);
+        addOrUpdateItem(product._id, quantity);
       } else {
         toast.warning(data.message);
       }
