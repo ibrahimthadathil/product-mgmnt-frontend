@@ -4,6 +4,8 @@ import React from 'react';
 import { LayoutGrid, List } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ViewMode } from '@/types/types';
 
@@ -13,6 +15,7 @@ interface FilterBarProps {
   onSearchChange: (query: string) => void;
   onCategoryChange?: (category: string) => void;
   onPriceChange?: (price: string) => void;
+  categories?: string[];
 }
 
 interface FilterFormData {
@@ -27,8 +30,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onSearchChange,
   onCategoryChange,
   onPriceChange,
+  categories = [],
 }) => {
-  const { register, watch } = useForm<FilterFormData>({
+  const { register, watch, setValue } = useForm<FilterFormData>({
     defaultValues: {
       search: '',
       category: 'Category',
@@ -42,15 +46,23 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       if (name === 'search' && value.search !== undefined) {
         onSearchChange(value.search);
       }
-      if (name === 'category' && value.category !== undefined && onCategoryChange) {
-        onCategoryChange(value.category);
-      }
-      if (name === 'price' && value.price !== undefined && onPriceChange) {
-        onPriceChange(value.price);
-      }
     });
     return () => subscription.unsubscribe();
-  }, [watch, onSearchChange, onCategoryChange, onPriceChange]);
+  }, [watch, onSearchChange]);
+
+  const handleCategoryChange = (value: string) => {
+    setValue('category', value);
+    if (onCategoryChange) {
+      onCategoryChange(value);
+    }
+  };
+
+  const handlePriceChange = (value: string) => {
+    setValue('price', value);
+    if (onPriceChange) {
+      onPriceChange(value);
+    }
+  };
 
   return (
     <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -64,66 +76,68 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="flex flex-wrap items-center gap-3">
         {/* Category Select */}
-        <div className="relative">
-          <select 
-            {...register('category')}
-            className="h-10 w-[140px] appearance-none rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option>Category</option>
-            <option>Clothing</option>
-            <option>Footwear</option>
-            <option>Accessories</option>
-          </select>
-          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-            <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
+        <Select onValueChange={handleCategoryChange} defaultValue="Category">
+          <SelectTrigger className="h-10 w-[140px] rounded-full border-slate-200 bg-slate-50 text-sm text-slate-600 focus:ring-2 focus:ring-primary-500">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Category">Category</SelectItem>
+            {categories.length > 0 ? (
+              categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))
+            ) : (
+              <SelectItem value="no-categories" disabled>
+                No categories available
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
 
         {/* Price Select */}
-        <div className="relative">
-          <select 
-            {...register('price')}
-            className="h-10 w-[140px] appearance-none rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option>Price</option>
-            <option>Low to High</option>
-            <option>High to Low</option>
-          </select>
-          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-            <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
+        <Select onValueChange={handlePriceChange} defaultValue="Price">
+          <SelectTrigger className="h-10 w-[140px] rounded-full border-slate-200 bg-slate-50 text-sm text-slate-600 focus:ring-2 focus:ring-primary-500">
+            <SelectValue placeholder="Price" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Price">Price</SelectItem>
+            <SelectItem value="Low to High">Low to High</SelectItem>
+            <SelectItem value="High to Low">High to Low</SelectItem>
+          </SelectContent>
+        </Select>
 
         {/* View Mode Toggle */}
         <div className="ml-auto flex items-center rounded-full bg-slate-100 p-1">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => onViewModeChange('grid')}
             className={cn(
-              "flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all",
+              "flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all h-auto",
               viewMode === 'grid'
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-sm hover:bg-white"
+                : "text-slate-500 hover:text-slate-900 hover:bg-transparent"
             )}
           >
             <LayoutGrid className="h-4 w-4" />
             <span className="hidden sm:inline">Grid View</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => onViewModeChange('table')}
             className={cn(
-              "flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all",
+              "flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all h-auto",
               viewMode === 'table'
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-sm hover:bg-white"
+                : "text-slate-500 hover:text-slate-900 hover:bg-transparent"
             )}
           >
             <List className="h-4 w-4" />
             <span className="hidden sm:inline">Table View</span>
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -7,28 +7,65 @@ import { GenericGrid } from "@/components/table/gridTable";
 import { ViewMode, Product } from "@/types/types";
 import { AnimatePresence } from "framer-motion";
 import { useState, useMemo } from "react";
-import { mockProducts } from "@/data/mockProducts";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
+import { UseRQ } from "@/hooks/useRQ";
+import { UseRMutation } from "@/hooks/useMutation";
+import { getAllProduct } from "@/api/productApi";
+import { addToCart } from "@/api/cartApi";
+import { useDebounce } from "@/hooks/useDebounce";
+import { toast } from "sonner";
 
 const ITEMS_PER_PAGE = 12;
 
-const page = () => {
+const Page = () => {
+  const { data: products, isLoading: productLoading } = UseRQ<Product[]>(
+    "products",
+    getAllProduct
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 700);
   const [selectedCategory, setSelectedCategory] = useState<string>("Category");
   const [priceSort, setPriceSort] = useState<string>("Price");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const categories = useMemo(() => {
+    if (!products || !Array.isArray(products)) return [];
+    const uniqueCategories = Array.from(
+      new Set(products.map((product) => product?.category).filter(Boolean))
+    );
+    return uniqueCategories.sort();
+  }, [products]);
+
+  const addToCartMutation = UseRMutation("cart", async (productId: string) => {
+    const result = await addToCart({ productId });
+    return { data: result };
+  });
+
+  const handleAddToCart = async (product: Product) => {
+    if (!product._id) {
+      toast.error("Product ID is missing");
+      return;
+    }
+    try {
+      await addToCartMutation.mutateAsync(product._id);
+      toast.success("Product added to cart successfully!");
+    } catch (error) {
+      toast.error("Failed to add product to cart");
+    }
+  };
+
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let filtered = [...mockProducts];
+    if (!products || !Array.isArray(products)) return [];
+    let filtered = [...products];
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // Apply search filter (using debounced value)
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(
         (product) =>
           product.name.toLowerCase().includes(query) ||
@@ -51,7 +88,7 @@ const page = () => {
     }
 
     return filtered;
-  }, [searchQuery, selectedCategory, priceSort]);
+  }, [products, debouncedSearchQuery, selectedCategory, priceSort]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
@@ -61,19 +98,24 @@ const page = () => {
 
   // Grid config for GenericGrid
   const gridConfig = {
-    getId: (product: Product) => product?.id,
-    getImageUrl: (product: Product) => product?.images[0]||"",
+    getId: (product: Product) => product?._id || "",
+    getImageUrl: (product: Product) => product?.images[0] || "",
     getTitle: (product: Product) => product?.name,
     getDescription: (product: Product) => product?.description,
     getPrice: (product: Product) => product?.price,
     onActionClick: (product: Product) => {
-      console.log("Add to cart:", product);
+      handleAddToCart(product);
     },
     actionIcon: <ShoppingCart className="h-4 w-4 text-white" />,
+    getNavigationUrl: (product: Product) => `/shop/${product?._id}`,
   };
 
   // Table columns for DataTable
   const tableColumns: ColumnDef<Product>[] = [
+    {
+      header:'No',
+      cell : ({row})=>(<p>{row.index +1}</p>)
+    },
     {
       accessorKey: "imageUrl",
       header: "Image",
@@ -119,14 +161,12 @@ const page = () => {
       cell: ({ row }) => (
         <Button
           size="sm"
-          onClick={() => {
-            console.log("Add to cart:", row.original);
-            // TODO: Implement add to cart functionality
-          }}
+          onClick={() => handleAddToCart(row.original)}
+          disabled={addToCartMutation.isPending}
           className="h-8"
         >
           <ShoppingCart className="h-4 w-4 mr-2" />
-          Add to Cart
+          {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
         </Button>
       ),
     },
@@ -161,9 +201,14 @@ const page = () => {
         onSearchChange={handleSearchChange}
         onCategoryChange={handleCategoryChange}
         onPriceChange={handlePriceChange}
+        categories={categories}
       />
       <div className="min-h-[600px]">
-        {filteredProducts.length === 0 ? (
+        {productLoading ? (
+          <div className="flex items-center justify-center h-96">
+            <p className="text-lg text-slate-500">Loading products...</p>
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="flex items-center justify-center h-96">
             <p className="text-lg text-slate-500">
               No products found matching your criteria.
@@ -201,4 +246,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

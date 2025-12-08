@@ -6,6 +6,7 @@ import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface GridItemConfig<T> {
   getId: (item: T) => string | number;
@@ -16,6 +17,7 @@ interface GridItemConfig<T> {
   formatPrice?: (price: number) => string;
   onActionClick?: (item: T) => void;
   actionIcon?: React.ReactNode;
+  getNavigationUrl?: (item: T) => string;
 }
 
 interface GenericGridProps<T> {
@@ -43,6 +45,7 @@ export function GenericGrid<T>({
   columns = { sm: 2, md: 2, lg: 4, xl: 4 },
   className,
 }: GenericGridProps<T>) {
+  const router = useRouter();
   const {
     getId,
     getImageUrl,
@@ -52,6 +55,7 @@ export function GenericGrid<T>({
     formatPrice = defaultFormatPrice,
     onActionClick,
     actionIcon = <ShoppingCart className="h-4 w-4 text-white" />,
+    getNavigationUrl,
   } = config;
 
   // Map column numbers to Tailwind classes
@@ -92,15 +96,33 @@ export function GenericGrid<T>({
       {items.map((item) => {
         const id = getId(item);
         const price = getPrice?.(item);
+        const navigationUrl = getNavigationUrl?.(item);
+        const isClickable = !!navigationUrl;
+
+        const handleCardClick = () => {
+          if (navigationUrl) {
+            router.push(navigationUrl);
+          }
+        };
+
+        const handleActionClick = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          if (onActionClick) {
+            onActionClick(item);
+          }
+        };
 
         return (
-          
           <motion.div
             key={id}
             layout
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="group relative flex flex-col overflow-hidden rounded-lg bg-white shadow-md transition hover:shadow-lg"
+            className={cn(
+              "group relative flex flex-col overflow-hidden rounded-lg bg-white shadow-md transition hover:shadow-lg",
+              isClickable && "cursor-pointer"
+            )}
+            onClick={handleCardClick}
           >
             <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
               <Image
@@ -133,7 +155,7 @@ export function GenericGrid<T>({
                 {onActionClick && (
                   <Button
                     size="icon"
-                    onClick={() => onActionClick(item)}
+                    onClick={handleActionClick}
                     className="h-6 w-6 rounded-full bg-primary hover:bg-primary/90"
                   >
                     {actionIcon}

@@ -4,6 +4,7 @@ import instance from "@/utils/axiosInstance"
 export const addToCart = async (data:{productId:string})=>{
     try {
         const result = await instance.post('/api/cart',data)
+        return result.data
     } catch (error) {
         throw error
     }

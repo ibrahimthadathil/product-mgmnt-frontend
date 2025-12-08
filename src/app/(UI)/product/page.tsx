@@ -23,8 +23,6 @@ export default function ProductsPage() {
     "products",
     getAllProduct
   );
-  console.log(products);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
