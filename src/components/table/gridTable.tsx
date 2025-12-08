@@ -124,7 +124,7 @@ export function GenericGrid<T>({
             )}
             onClick={handleCardClick}
           >
-            <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
+            <div className="aspect-4/3 w-full overflow-hidden bg-slate-100">
               <Image
                 src={getImageUrl(item)}
                 alt={getTitle(item)}

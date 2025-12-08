@@ -18,7 +18,7 @@ import { addToCart } from "@/api/cartApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "sonner";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 8;
 
 const Page = () => {
   const { data: products, isLoading: productLoading } = UseRQ<Product[]>(

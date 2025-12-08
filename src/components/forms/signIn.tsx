@@ -7,12 +7,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 
 interface SignInFormProps {
   onSubmit?: (data: SignInInput) => void | Promise<void>
 }
 
 export function SignInForm({ onSubmit }: SignInFormProps) {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
   const form = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -24,9 +30,28 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
   const handleSubmit = async (data: SignInInput) => {
     if (onSubmit) {
       await onSubmit(data)
-    } else {
-      // Placeholder for NextAuth integration
-      console.log("Sign in:", data)
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        toast.error(result.error || "Invalid credentials")
+      } else if (result?.ok) {
+        toast.success("Signed in successfully")
+        router.push("/")
+        router.refresh()
+      }
+    } catch (error) {
+      toast.error("An error occurred during sign in")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -61,8 +86,8 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
           )}
         />
 
-        <Button type="submit" className="w-full">
-          Sign In
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Signing in..." : "Sign In"}
         </Button>
       </form>
     </Form>

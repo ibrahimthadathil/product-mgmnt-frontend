@@ -7,12 +7,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
+import { userSignUp } from "@/api/authApi"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 
 interface SignUpFormProps {
   onSubmit?: (data: SignUpInput) => void | Promise<void>
 }
 
 export function SignUpForm({ onSubmit }: SignUpFormProps) {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
   const form = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -25,9 +31,28 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
   const handleSubmit = async (data: SignUpInput) => {
     if (onSubmit) {
       await onSubmit(data)
-    } else {
-      // Placeholder for NextAuth integration
-      console.log("Sign up:", data)
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const result = await userSignUp({
+        userName: data.username,
+        email: data.email,
+        password: data.password,
+      })
+
+      if (result.success) {
+        toast.success("Account created successfully! Please sign in.")
+        // Redirect to sign in after successful signup
+        router.push("/login")
+      } else {
+        toast.error(result.message || "Failed to create account")
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "An error occurred during sign up")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -76,8 +101,8 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
           )}
         />
 
-        <Button type="submit" className="w-full">
-          Sign Up
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Creating account..." : "Sign Up"}
         </Button>
       </form>
     </Form>
