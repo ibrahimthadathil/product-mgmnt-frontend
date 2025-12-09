@@ -60,16 +60,24 @@ export const authOptions: NextAuthOptions = {
   // secret: process.env.NEXTAUTH_SECRET,
   secret: process.env.NEXTAUTH_SECRET,
   cookies: {
+    // Add custom cookie configuration
     sessionToken: {
-      name: "__Secure-next-auth.session-token",
+      name: `client-mt5-session-token`,
       options: {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        sameSite: "lax",
         path: "/",
+        // secure: process.env.NODE_ENV === "production",
       },
     },
-  },
+    callbackUrl: {
+      name: `client-mt5-callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        // secure: process.env.NODE_ENV === "production",
+      },
+    },}
 };
 
 const handler = NextAuth(authOptions);
