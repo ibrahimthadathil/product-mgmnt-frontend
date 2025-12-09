@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-import type { BackendCartResponse, CartItem, Product } from "@/types/types";
+import type { BackendCartResponse, CartItem } from "@/types/types";
 import CartItemRow from "./cart-item-row";
 import OrderSummary from "./order-summery";
 import { UseRQ } from "@/hooks/useRQ";
@@ -25,17 +25,19 @@ export default function ShoppingCart() {
   const { setCartFromResponse, clearCart } = useCartStore();
 
   const updateCartMutation = UseRMutation(
-    "cart",
+    "cart-update",
     async (data: { cartId: string; quantity: number }) => {
       return await updateCart(data);
-    }
+    },
+    "cart"
   );
 
   const deleteCartMutation = UseRMutation(
-    "cart",
+    "cart-delete",
     async (cartItemId: string) => {
       return await deleteCart(cartItemId);
-    }
+    },
+    "cart" // refetch
   );
 
   useEffect(() => {

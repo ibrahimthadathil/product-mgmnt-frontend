@@ -24,39 +24,41 @@ const ProductDetailPage = () => {
   const { isAuthenticated } = useAuthStore();
   const { items, addOrUpdateItem } = useCartStore();
 
-  const { data: product, isLoading, error } = UseRQ<Product>(
-    `product-${productId}`, ()=>getProductById(productId)
+  const {
+    data: product,
+    isLoading,
+    error,
+  } = UseRQ<Product>(`product-${productId}`, () => getProductById(productId));
+
+  const addToCartMutation = UseRMutation(
+    "add-to-cart",
+    async (body: { product: string; qty: number }) => {
+      const response = await addToCart({
+        items: [{ product: body.product, quantity: body.qty }],
+      });
+      return { data: response };
+    },
+    "cart",
+    (res) => {
+      toast.success(res?.data?.message || "Added to cart!");
+      if (product?._id) addOrUpdateItem(product._id, quantity);
+    }
   );
-  
-  const addToCartMutation = UseRMutation("cart", async (data: { product: string; qty: number }) => {
-    const result = await addToCart({ items: [{ product: data.product, quantity: data.qty }] });
-    return { data: result };
-  });
 
   const handleAddToCart = async () => {
-    if (!product?._id) {
-      toast.warning("Product ID is missing");
-      return;
-    }
-
-    if (!isAuthenticated) {
-      toast.error("Please login to add items to your cart");
-      router.push("/login");
-      return;
-    }
-
-    const alreadyInCart = items.some((item) => item.productId === product._id);
+    const alreadyInCart = items.some((item) => item.productId === product?._id);
     if (alreadyInCart) {
       toast.info("This product is already in your cart");
       return;
     }
     try {
-      const data:any = await addToCartMutation.mutateAsync({ product: product._id, qty: quantity });
+      const data: any = await addToCartMutation.mutateAsync({
+        product: product?._id as string,
+        qty: quantity,
+      });
       if (data.success) {
         toast.success(data.message);
-        addOrUpdateItem(product._id, quantity);
-      } else {
-        toast.warning(data.message);
+        addOrUpdateItem(product?._id as string, quantity);
       }
     } catch (error) {
       toast.error("Failed to add product to cart");
@@ -130,7 +132,7 @@ const ProductDetailPage = () => {
                     src={mainImage}
                     alt={product.name}
                     fill
-                    loading="eager"  
+                    loading="eager"
                     className="object-cover"
                     priority
                     unoptimized
@@ -204,9 +206,7 @@ const ProductDetailPage = () => {
             size="lg"
           >
             <ShoppingCart className="h-5 w-5 mr-2" />
-            {addToCartMutation.isPending
-              ? "Adding to Cart..."
-              : "Add to Cart"}
+            {addToCartMutation.isPending ? "Adding to Cart..." : "Add to Cart"}
           </Button>
 
           {/* Thumbnail Gallery - Below Add to Cart */}

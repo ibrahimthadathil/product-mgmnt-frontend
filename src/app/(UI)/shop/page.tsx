@@ -38,7 +38,7 @@ const Page = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("Category");
   const [priceSort, setPriceSort] = useState<string>("Price");
   const [currentPage, setCurrentPage] = useState(1);
-
+  
   const categories = useMemo(() => {
     if (!products || !Array.isArray(products)) return [];
     const uniqueCategories = Array.from(
@@ -56,7 +56,9 @@ const Page = () => {
       return { data: result };
     },
     "cart",
-    ()=>toast.success('Added to cart')
+    () => {
+      toast.success("Added to cart");
+    }
   );
 
   const handleAddToCart = async (product: Product, quantity = 1) => {
@@ -78,14 +80,11 @@ const Page = () => {
     }
 
     try {
-      const data:any = await addToCartMutation.mutateAsync({
+      await addToCartMutation.mutateAsync({
         product: product._id,
         qty: quantity,
       });
-      if (data.success) {
-        toast.success(data.message);
-        addOrUpdateItem(product._id, quantity);
-      } 
+      addOrUpdateItem(product._id, quantity);
     } catch (error) {
       toast.error("Failed to add product to cart");
     }
@@ -151,7 +150,7 @@ const Page = () => {
           alt={row.original.name}
           width={64}
           height={64}
-          loading="eager"  
+          loading="eager"
           className="h-16 w-16 object-cover rounded"
         />
       ),
