@@ -31,8 +31,8 @@ export const useAuth = (isSignup: boolean) => {
         name:(data.user as any).name,
         role:data.user.role,
         token:data.accessToken,
-        redirect: true,
-        callbackUrl: "/shop",
+        redirect: false,
+        // callbackUrl: "/shop",
       })
       setIsLoading(false)
       router.push('/shop')
