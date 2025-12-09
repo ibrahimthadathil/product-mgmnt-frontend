@@ -1,59 +1,33 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import axios from "axios";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        name: { label: "Name", type: "text" },
+        role: { label: "Role", type: "text" },
+        token: { label: "Token", type: "text" },
+        password: { label: "Password", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
+        if (!credentials?.email || !credentials?.name) {
+          return null;
         }
 
-        try {
-          const response = await axios.post(
-            `${API_URL}/api/auth/signin`,
-            {
-              email: credentials.email,
-              password: credentials.password,
-            },
-            {
-              withCredentials: true,
-            }
-          );
+        const user: any = {
+          name: credentials.name,
+          email: credentials.email as string,
+          role: credentials.role,
+          token: credentials.token as string,
+          password: credentials.password as string,
+        };
 
-          const { success, accessToken, message, userName } = response.data;
-
-          if (!success || !accessToken) {
-            throw new Error(message || "Authentication failed");
-          }
-
-          const tokenPayload = JSON.parse(
-            Buffer.from(accessToken.split(".")[1], "base64").toString()
-          );
-
-          return {
-            id: tokenPayload.id,
-            email: tokenPayload.email,
-            name:
-              userName ||
-              tokenPayload.name ||
-              "",
-            role: tokenPayload.role || "user",
-            accessToken,
-          };
-        } catch (error: any) {
-          console.error("Auth error:", error);
-          throw new Error(
-            error.response?.data?.message || "Invalid credentials"
-          );
+        if (user) {
+          return user;
+        } else {
+          return null;
         }
       },
     }),
@@ -61,22 +35,18 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = user.accessToken;
-        token.id = user.id;
+        token.accessToken = (user as any).token;
         token.name = user.name;
         token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user = {
-          id: token.id as string,
-          email: token.email as string,
-          name: token.name as string,
-          role: token.role as string,
-        };
-        session.accessToken = token.accessToken as string;
+      if (token && session.user) {
+        session.user.name = token.name;
+        session.user.email = token.email as string;
+        session.user.role = token.role;
+        (session.user as any).token = token.accessToken as string;
       }
       return session;
     },

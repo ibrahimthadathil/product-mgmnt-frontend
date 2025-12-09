@@ -51,7 +51,7 @@ const ProductDetailPage = () => {
       return;
     }
     try {
-      const data = await addToCartMutation.mutateAsync({ product: product._id, qty: quantity });
+      const data:any = await addToCartMutation.mutateAsync({ product: product._id, qty: quantity });
       if (data.success) {
         toast.success(data.message);
         addOrUpdateItem(product._id, quantity);
@@ -130,6 +130,7 @@ const ProductDetailPage = () => {
                     src={mainImage}
                     alt={product.name}
                     fill
+                    loading="eager"  
                     className="object-cover"
                     priority
                     unoptimized

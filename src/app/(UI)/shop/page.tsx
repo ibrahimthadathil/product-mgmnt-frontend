@@ -54,7 +54,9 @@ const Page = () => {
         items: [{ product: payload.product, quantity: payload.qty }],
       });
       return { data: result };
-    }
+    },
+    "cart",
+    ()=>toast.success('Added to cart')
   );
 
   const handleAddToCart = async (product: Product, quantity = 1) => {
@@ -76,14 +78,14 @@ const Page = () => {
     }
 
     try {
-      const data = await addToCartMutation.mutateAsync({
+      const data:any = await addToCartMutation.mutateAsync({
         product: product._id,
         qty: quantity,
       });
       if (data.success) {
         toast.success(data.message);
         addOrUpdateItem(product._id, quantity);
-      } else toast.warning(data.message);
+      } 
     } catch (error) {
       toast.error("Failed to add product to cart");
     }
@@ -149,6 +151,7 @@ const Page = () => {
           alt={row.original.name}
           width={64}
           height={64}
+          loading="eager"  
           className="h-16 w-16 object-cover rounded"
         />
       ),

@@ -6,103 +6,83 @@ const instance = axios.create({
   withCredentials: true,
 });
 
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
-}> = [];
-
-const processQueue = (
-  error: AxiosError | null,
-  token: string | null = null
-) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-
-  failedQueue = [];
-};
 
 instance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const session = await getSession();
-    if (session?.accessToken) {
-      config.headers.Authorization = `Bearer ${session.accessToken}`;
+    const session = await getSession();    
+    const token = (session?.user as { token?: string })?.token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-instance.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            return instance(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
+// instance.interceptors.response.use(
+//   (response) => response,
+//   async (error: AxiosError) => {
+//     const originalRequest = error.config as InternalAxiosRequestConfig & {
+//       _retry?: boolean;
+//     };
 
-      originalRequest._retry = true;
-      isRefreshing = true;
+//     if (error.response?.status === 401 && !originalRequest._retry) {
+//       if (isRefreshing) {
+//         return new Promise((resolve, reject) => {
+//           failedQueue.push({ resolve, reject });
+//         })
+//           .then((token) => {
+//             if (originalRequest.headers) {
+//               originalRequest.headers.Authorization = `Bearer ${token}`;
+//             }
+//             return instance(originalRequest);
+//           })
+//           .catch((err) => {
+//             return Promise.reject(err);
+//           });
+//       }
 
-      try {
-        const refreshResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`,
-          {},
-          {
-            withCredentials: true,
-          }
-        );
+//       originalRequest._retry = true;
+//       isRefreshing = true;
 
-        const { accessToken } = refreshResponse.data;
+//       try {
+//         const refreshResponse = await axios.post(
+//           `${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`,
+//           {},
+//           {
+//             withCredentials: true,
+//           }
+//         );
 
-        if (accessToken) {
-          const session = await getSession();
-          if (session) {
-            processQueue(null, accessToken);
+//         const { accessToken } = refreshResponse.data;
 
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-            }
+//         if (accessToken) {
+//           const session = await getSession();
+//           if (session) {
+//             processQueue(null, accessToken);
 
-            isRefreshing = false;
-            return instance(originalRequest);
-          }
-        }
-      } catch (refreshError) {
-        processQueue(refreshError as AxiosError, null);
-        isRefreshing = false;
+//             if (originalRequest.headers) {
+//               originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+//             }
 
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
-        return Promise.reject(refreshError);
-      }
-    }
+//             isRefreshing = false;
+//             return instance(originalRequest);
+//           }
+//         }
+//       } catch (refreshError) {
+//         processQueue(refreshError as AxiosError, null);
+//         isRefreshing = false;
 
-    return Promise.reject(error);
-  }
-);
+//         if (typeof window !== "undefined") {
+//           window.location.href = "/login";
+//         }
+//         return Promise.reject(refreshError);
+//       }
+//     }
+
+//     return Promise.reject(error);
+//   }
+// );
 
 export default instance;

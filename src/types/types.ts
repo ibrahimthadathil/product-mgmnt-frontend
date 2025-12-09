@@ -15,9 +15,10 @@ export interface CartItem extends Product {
   created_at?: Date;
 }
 
-export interface Iuser extends Document {
-  userName: string;
+export interface Iuser {
+  name: string;
   email: string;
+  role:string;
   password: string;
   createdAt?: Date;
 }

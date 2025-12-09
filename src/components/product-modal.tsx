@@ -12,7 +12,7 @@ import ProductForm from "./forms/product";
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (product: any) => void;
+  onSubmit: (product: FormData) => any;
   initialProduct?: Product | null;
 }
 

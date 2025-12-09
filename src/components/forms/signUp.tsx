@@ -1,8 +1,4 @@
 "use client";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signUpSchema, type SignUpInput } from "@/schema/authSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,59 +9,13 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { userSignUp } from "@/api/authApi";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
-interface SignUpFormProps {
-  onSubmit?: (data: SignUpInput) => void | Promise<void>;
-}
-
-export function SignUpForm({ onSubmit }: SignUpFormProps) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const form = useForm<SignUpInput>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-    },
-  });
-
-  const handleSubmit = async (data: SignUpInput) => {
-    if (onSubmit) {
-      await onSubmit(data);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await userSignUp({
-        userName: data.username,
-        email: data.email,
-        password: data.password,
-      });
-
-      if (result.success) {
-        toast.success("Account created successfully! Please sign in.");
-        router.push("/login");
-      } else {
-        toast.error(result.message || "Failed to create account");
-      }
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || "An error occurred during sign up"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
+export function SignUpForm() {
+  const {form,onFormSubmit,isLoading} =useAuth(true)
+    return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={onFormSubmit} className="space-y-4">
         <FormField
           control={form.control}
           name="username"

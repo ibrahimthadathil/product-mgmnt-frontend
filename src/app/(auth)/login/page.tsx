@@ -14,17 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
- const Login=()=> {
-  const router = useRouter();
-  const { status } = useSession();
+const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.replace("/shop");
-    }
-  }, [status, router]);
-
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -63,6 +54,6 @@ import {
       </Card>
     </main>
   );
-}
+};
 
-export default Login
+export default Login;

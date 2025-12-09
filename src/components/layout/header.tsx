@@ -31,6 +31,7 @@ export const Header = () => {
 
   const { user, isAuthenticated, setUser, clearUser } = useAuthStore();
   const { itemCount, clearCart } = useCartStore();
+console.log(session);
 
   useEffect(() => setMounted(true), []);
 

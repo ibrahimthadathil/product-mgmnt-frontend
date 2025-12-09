@@ -14,7 +14,7 @@ export const productSchema = z.object({
       { message: "Price must be greater than 0" }
     ),
   description: z.string().min(1, { message: "Description is required" }),
-  images: z.array(z.string()).min(1, { message: "At least one image is required" }),
+  images: z.array(z.any()).min(1, { message: "At least one image is required" }).max(3,{message:'Maximum three photos'}),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
