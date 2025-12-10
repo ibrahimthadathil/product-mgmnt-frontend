@@ -23,7 +23,7 @@ export interface Iuser {
   createdAt?: Date;
 }
 
-export interface BackendCartResponse {
+export interface cartResponse {
   _id: string;
   user: string;
   items: Array<{
