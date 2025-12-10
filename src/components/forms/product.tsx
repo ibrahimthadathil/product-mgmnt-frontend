@@ -54,9 +54,12 @@ const ProductForm = ({
     }
   );
   useEffect(() => {
-    setValue("images", newImageFiles);
-    console.log("hj");
-  }, [newImageFiles]);
+   const bothImage = [
+      ...retainedExistingImages,
+      ...newImageFiles
+    ];
+    setValue("images", bothImage as any);
+  }, [newImageFiles, retainedExistingImages, setValue]);
   console.log(watch("images"), newImageFiles);
   const { mutate, isPending } = UseRMutation<FormData, FormData>(
     initialProduct ? "updateProduct" : "createProduct",
