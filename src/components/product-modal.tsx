@@ -1,3 +1,4 @@
+
 "use client";
 import {
   Dialog,
@@ -5,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
 import { Product } from "@/types/types";
 import ProductForm from "./forms/product";
 
@@ -14,6 +14,7 @@ interface ProductModalProps {
   onClose: () => void;
   onSubmit: (product: FormData) => any;
   initialProduct?: Product | null;
+  isLoading?: boolean; // new
 }
 
 export function ProductModal({
@@ -21,6 +22,7 @@ export function ProductModal({
   onClose,
   onSubmit,
   initialProduct,
+  isLoading,
 }: ProductModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -35,6 +37,7 @@ export function ProductModal({
           onClose={onClose}
           onSubmit={onSubmit}
           initialProduct={initialProduct as Product}
+          isLoading={isLoading} // pass down
         />
       </DialogContent>
     </Dialog>
